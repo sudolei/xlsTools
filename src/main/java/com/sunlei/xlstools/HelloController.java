@@ -1,9 +1,16 @@
 package com.sunlei.xlstools;
 
 import com.sunlei.xlstools.util.AlertUtil;
+import com.sunlei.xlstools.util.FileUtil;
+import com.sunlei.xlstools.util.StringUtils;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -37,13 +44,20 @@ public class HelloController {
     private Button submitBtn;
 
     @FXML
-    protected void selectXlsClick() {
+    private Button setDefault;
 
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("选择文件夹");
+    @FXML
+    protected void selectXlsClick() {
+        String sysVal = FileUtil.getSysVal();
+        if (!StringUtils.isEmpty(sysVal)) {
+            defFolder.setText(sysVal);
+        }
         Stage stage = (Stage) selectXlsBtn.getScene().getWindow();
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("选择文件");
+        if (!StringUtils.isEmpty(defFolder.getText())) {
+            fileChooser.setInitialDirectory(new File(defFolder.getText()));
+        }
         File selectedFile = fileChooser.showOpenDialog(stage);
         if (selectedFile != null) {
             // 处理选择的文件
@@ -104,5 +118,57 @@ public class HelloController {
             Thread.sleep(1000);
             AlertUtil.showSuccessAlert("统计完成！请到文件目录查看");
         }
+    }
+
+    @FXML
+    private Label defFolder;
+    @FXML
+    protected  void setDefaultClick(){
+        Stage stage = new Stage();
+        // 创建新的Stage对象
+        // 设置窗口标题
+        stage.setTitle("设置默认路径");
+        stage.setWidth(300);
+        stage.setHeight(200);
+        String sysVal = FileUtil.getSysVal();
+        if (!StringUtils.isEmpty(sysVal)) {
+            defFolder.setText(sysVal);
+        }
+        // 创建文本标签
+        TextField field = new TextField(defFolder.getText());
+
+        // 创建按钮
+        Button button = new Button("保存");
+        button.setStyle("-fx-background-color: green;");
+        button.setTextFill(Paint.valueOf("#fcf8f8"));
+        // 创建垂直布局容器
+        VBox vbox = new VBox();
+        vbox.setSpacing(10);
+        vbox.setPadding(new Insets(10));
+        vbox.getChildren().addAll(field, button);
+
+        // 创建场景并将容器添加到场景中
+        Scene scene = new Scene(vbox, 300, 200);
+
+        // 将场景设置到舞台
+        stage.setScene(scene);
+        // 显示窗口
+        stage.show();
+
+
+
+        button.setOnAction(e -> {
+
+            String path = field.getText();
+            File file = new File(path);
+            if (!file.exists()) {
+                AlertUtil.showWarningAlert("保存失败,路径不存在！");
+                return;
+            }
+            defFolder.setText(field.getText());
+            AlertUtil.showSuccessAlert("保存成功!");
+            FileUtil.setSysVal(field.getText());
+            stage.close();
+        });
     }
 }
